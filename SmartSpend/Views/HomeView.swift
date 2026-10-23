@@ -2,28 +2,49 @@
 import SwiftUI
 import CoreData
 
+// HomeView is the main dashboard of SmartSpend.
 struct HomeView: View {
 
+    // MARK: Fetch Expense Records
+
+    // Get all expenses from Core Data.
+    // Sort them from newest to oldest.
     @FetchRequest(
         sortDescriptors: [
-            NSSortDescriptor(keyPath: \Expense.date, ascending: false)
+            NSSortDescriptor(
+                keyPath: \Expense.date,
+                ascending: false
+            )
         ],
         animation: .default
     )
     private var expenses: FetchedResults<Expense>
 
+    // MARK: Fetch Income Records
+
+    // Get all income records from Core Data.
     @FetchRequest(
         sortDescriptors: [
-            NSSortDescriptor(keyPath: \Income.date, ascending: false)
+            NSSortDescriptor(
+                keyPath: \Income.date,
+                ascending: false
+            )
         ],
         animation: .default
     )
     private var incomes: FetchedResults<Income>
 
+    // MARK: State Variables
+
+    // Control which screens are displayed.
     @State private var showAddExpense = false
     @State private var showAddIncome = false
     @State private var showIncomeHistory = false
+    @State private var showSavingsGoals = false
 
+    // MARK: Calculate Total Income
+
+    // Add together all saved income amounts.
     private var totalIncome: Double {
 
         var total = 0.0
@@ -35,6 +56,9 @@ struct HomeView: View {
         return total
     }
 
+    // MARK: Calculate Total Expenses
+
+    // Add together all saved expense amounts.
     private var totalExpenses: Double {
 
         var total = 0.0
@@ -46,17 +70,26 @@ struct HomeView: View {
         return total
     }
 
+    // MARK: Calculate Total Balance
+
+    // Balance = Total Income - Total Expenses
     private var totalBalance: Double {
+
         return totalIncome - totalExpenses
     }
+
+    // MARK: Main Dashboard
 
     var body: some View {
 
         NavigationStack {
 
+            // Allow the dashboard to scroll vertically.
             ScrollView {
 
                 VStack(alignment: .leading, spacing: 20) {
+
+                    // MARK: Welcome Section
 
                     HStack {
 
@@ -78,6 +111,8 @@ struct HomeView: View {
                             .foregroundStyle(.purple)
                     }
 
+                    // MARK: Total Balance Card
+
                     VStack(alignment: .leading, spacing: 12) {
 
                         Text("Total Balance")
@@ -92,13 +127,21 @@ struct HomeView: View {
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.8))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
                     .padding(25)
                     .background(Color.purple)
-                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 20)
+                    )
+
+                    // MARK: Income and Expense Summary
 
                     HStack(spacing: 15) {
 
+                        // Income summary card.
                         summaryCard(
                             title: "Income",
                             amount: totalIncome,
@@ -106,6 +149,7 @@ struct HomeView: View {
                             color: .green
                         )
 
+                        // Expense summary card.
                         summaryCard(
                             title: "Expenses",
                             amount: totalExpenses,
@@ -114,13 +158,18 @@ struct HomeView: View {
                         )
                     }
 
+                    // MARK: Quick Actions
+
                     Text("Quick Actions")
                         .font(.headline)
 
                     HStack(spacing: 15) {
 
+                        // Open Add Expense screen.
                         Button {
+
                             showAddExpense = true
+
                         } label: {
 
                             quickAction(
@@ -130,8 +179,11 @@ struct HomeView: View {
                         }
                         .buttonStyle(.plain)
 
+                        // Open Add Income screen.
                         Button {
+
                             showAddIncome = true
+
                         } label: {
 
                             quickAction(
@@ -142,10 +194,12 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // Income History Button
+                    // MARK: Income History
 
                     Button {
+
                         showIncomeHistory = true
+
                     } label: {
 
                         HStack(spacing: 15) {
@@ -162,16 +216,52 @@ struct HomeView: View {
                         }
                         .foregroundStyle(.purple)
                         .padding()
-                        .background(Color(.secondarySystemBackground))
+                        .background(
+                            Color(.secondarySystemBackground)
+                        )
                         .clipShape(
                             RoundedRectangle(cornerRadius: 15)
                         )
                     }
                     .buttonStyle(.plain)
 
+                    // MARK: Savings Goals
+
+                    Button {
+
+                        showSavingsGoals = true
+
+                    } label: {
+
+                        HStack(spacing: 15) {
+
+                            Image(systemName: "target")
+                                .font(.title3)
+
+                            Text("My Savings Goals")
+                                .fontWeight(.semibold)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                        }
+                        .foregroundStyle(.purple)
+                        .padding()
+                        .background(
+                            Color(.secondarySystemBackground)
+                        )
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: 15)
+                        )
+                    }
+                    .buttonStyle(.plain)
+
+                    // MARK: Recent Transactions
+
                     Text("Recent Transactions")
                         .font(.headline)
 
+                    // Display a message if no expenses exist.
                     if expenses.isEmpty {
 
                         VStack(spacing: 10) {
@@ -188,6 +278,7 @@ struct HomeView: View {
 
                     } else {
 
+                        // Show only the five most recent expenses.
                         VStack(spacing: 15) {
 
                             ForEach(
@@ -209,21 +300,40 @@ struct HomeView: View {
                 .padding()
             }
             .navigationTitle("Dashboard")
+
+            // MARK: Add Expense Screen
+
             .sheet(isPresented: $showAddExpense) {
 
                 AddExpenseView()
             }
+
+            // MARK: Add Income Screen
+
             .sheet(isPresented: $showAddIncome) {
 
                 AddIncomeView()
             }
+
+            // MARK: Income History Screen
+
             .sheet(isPresented: $showIncomeHistory) {
 
                 IncomeView()
             }
+
+            // MARK: Savings Goals Screen
+
+            .sheet(isPresented: $showSavingsGoals) {
+
+                SavingsGoalsView()
+            }
         }
     }
 
+    // MARK: Summary Card
+
+    // Reusable card for displaying income or expenses.
     private func summaryCard(
         title: String,
         amount: Double,
@@ -244,12 +354,20 @@ struct HomeView: View {
             Text("Rs. \(amount, specifier: "%.2f")")
                 .font(.headline)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(
+            maxWidth: .infinity,
+            alignment: .leading
+        )
         .padding()
         .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .clipShape(
+            RoundedRectangle(cornerRadius: 15)
+        )
     }
 
+    // MARK: Quick Action Card
+
+    // Reusable design for Add Expense and Add Income.
     private func quickAction(
         title: String,
         icon: String
@@ -267,9 +385,14 @@ struct HomeView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color(.secondarySystemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 15))
+        .clipShape(
+            RoundedRectangle(cornerRadius: 15)
+        )
     }
 
+    // MARK: Transaction Row
+
+    // Display one expense in the recent transactions list.
     private func transactionRow(
         title: String,
         amount: Double,
@@ -282,7 +405,9 @@ struct HomeView: View {
                 .foregroundStyle(.purple)
                 .frame(width: 40, height: 40)
                 .background(Color.purple.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 10)
+                )
 
             Text(title)
                 .font(.subheadline)
@@ -296,6 +421,9 @@ struct HomeView: View {
         }
     }
 
+    // MARK: Expense Category Icons
+
+    // Return a different icon for each expense category.
     private func categoryIcon(for category: String) -> String {
 
         if category == "Food" {
@@ -325,7 +453,10 @@ struct HomeView: View {
     }
 }
 
+// MARK: Xcode Preview
+
 #Preview {
+
     HomeView()
         .environment(
             \.managedObjectContext,
