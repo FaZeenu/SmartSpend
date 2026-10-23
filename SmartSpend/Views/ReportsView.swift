@@ -6,7 +6,7 @@ import Charts
 // This screen displays monthly financial reports.
 struct ReportsView: View {
 
-    // MARK: Fetch Expenses
+    //  Fetch Expenses
 
     // Retrieve all saved expenses from Core Data.
     @FetchRequest(
@@ -20,7 +20,7 @@ struct ReportsView: View {
     )
     private var expenses: FetchedResults<Expense>
 
-    // MARK: Fetch Income
+    //  Fetch Income
 
     // Retrieve all saved income records from Core Data.
     @FetchRequest(
@@ -34,7 +34,7 @@ struct ReportsView: View {
     )
     private var incomes: FetchedResults<Income>
 
-    // MARK: State Variables
+    //  State Variables
 
     // Store the month selected by the user.
     // The current date is selected by default.
@@ -52,7 +52,7 @@ struct ReportsView: View {
         "Other"
     ]
 
-    // MARK: Calculate Monthly Income
+    // Calculate Monthly Income
 
     // Calculate income recorded during the selected month.
     private var monthlyIncome: Double {
@@ -81,7 +81,7 @@ struct ReportsView: View {
         return total
     }
 
-    // MARK: Calculate Monthly Expenses
+    //  Calculate Monthly Expenses
 
     // Calculate expenses recorded during the selected month.
     private var monthlyExpenses: Double {
@@ -108,7 +108,7 @@ struct ReportsView: View {
         return total
     }
 
-    // MARK: Calculate Monthly Balance
+    // Calculate Monthly Balance
 
     // Monthly Balance = Monthly Income - Monthly Expenses
     private var monthlyBalance: Double {
@@ -116,7 +116,7 @@ struct ReportsView: View {
         return monthlyIncome - monthlyExpenses
     }
 
-    // MARK: Calculate Category Spending
+    // Calculate Category Spending
 
     // Calculate how much was spent in each category
     // during the selected month.
@@ -168,7 +168,7 @@ struct ReportsView: View {
         return results
     }
 
-    // MARK: Main User Interface
+    // Main User Interface
 
     var body: some View {
 
@@ -178,7 +178,7 @@ struct ReportsView: View {
 
                 VStack(alignment: .leading, spacing: 20) {
 
-                    // MARK: Financial Overview
+                    //  Financial Overview
 
                     Text("Financial Overview")
                         .font(.title2)
@@ -193,7 +193,7 @@ struct ReportsView: View {
                     )
                     .datePickerStyle(.compact)
 
-                    // MARK: Monthly Summary
+                    //  Monthly Summary
 
                     VStack(spacing: 15) {
 
@@ -219,7 +219,7 @@ struct ReportsView: View {
                         )
                     }
 
-                    // MARK: Income vs Expenses Chart
+                    //  Income vs Expenses Chart
 
                     Text("Income vs Expenses")
                         .font(.headline)
@@ -251,7 +251,7 @@ struct ReportsView: View {
                         RoundedRectangle(cornerRadius: 15)
                     )
 
-                    // MARK: Category Spending Chart
+                    // Category Spending Chart
 
                     Text("Spending by Category")
                         .font(.headline)
@@ -298,7 +298,7 @@ struct ReportsView: View {
         }
     }
 
-    // MARK: Reusable Report Row
+    // Reusable Report Row
 
     // Display a financial label and its amount.
     private func reportRow(
@@ -328,7 +328,7 @@ struct ReportsView: View {
     }
 }
 
-// MARK: Category Spending Model
+//  Category Spending Model
 
 // Stores the category name and total spending.
 // Identifiable allows SwiftUI Charts to identify each item.
@@ -339,7 +339,7 @@ struct CategorySpending: Identifiable {
     let amount: Double
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

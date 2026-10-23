@@ -6,14 +6,36 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0F5059A1308B74520066B8CD /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0F5059A0308B74520066B8CD /* FirebaseCore */; };
+		0F5059A3308B747C0066B8CD /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0F5059A2308B747C0066B8CD /* FirebaseFirestore */; };
+		0F5059A5308B74890066B8CD /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 0F5059A4308B74890066B8CD /* FirebaseAuth */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0FFA7512308C038B00229E7E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0FA5FD3D308636D3004801CD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0FA5FD44308636D4004801CD;
+			remoteInfo = SmartSpend;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		0FA5FD45308636D4004801CD /* SmartSpend.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartSpend.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FFA750E308C038B00229E7E /* SmartSpendTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SmartSpendTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0FA5FD47308636D4004801CD /* SmartSpend */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = SmartSpend;
+			sourceTree = "<group>";
+		};
+		0FFA750F308C038B00229E7E /* SmartSpendTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = SmartSpendTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -23,16 +45,35 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F5059A1308B74520066B8CD /* FirebaseCore in Frameworks */,
+				0F5059A5308B74890066B8CD /* FirebaseAuth in Frameworks */,
+				0F5059A3308B747C0066B8CD /* FirebaseFirestore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFA750B308C038B00229E7E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0F50599F308B74520066B8CD /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		0FA5FD3C308636D3004801CD = {
 			isa = PBXGroup;
 			children = (
 				0FA5FD47308636D4004801CD /* SmartSpend */,
+				0FFA750F308C038B00229E7E /* SmartSpendTests */,
+				0F50599F308B74520066B8CD /* Frameworks */,
 				0FA5FD46308636D4004801CD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +82,7 @@
 			isa = PBXGroup;
 			children = (
 				0FA5FD45308636D4004801CD /* SmartSpend.app */,
+				0FFA750E308C038B00229E7E /* SmartSpendTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,10 +107,36 @@
 			);
 			name = SmartSpend;
 			packageProductDependencies = (
+				0F5059A0308B74520066B8CD /* FirebaseCore */,
+				0F5059A2308B747C0066B8CD /* FirebaseFirestore */,
+				0F5059A4308B74890066B8CD /* FirebaseAuth */,
 			);
 			productName = SmartSpend;
 			productReference = 0FA5FD45308636D4004801CD /* SmartSpend.app */;
 			productType = "com.apple.product-type.application";
+		};
+		0FFA750D308C038B00229E7E /* SmartSpendTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0FFA7514308C038B00229E7E /* Build configuration list for PBXNativeTarget "SmartSpendTests" */;
+			buildPhases = (
+				0FFA750A308C038B00229E7E /* Sources */,
+				0FFA750B308C038B00229E7E /* Frameworks */,
+				0FFA750C308C038B00229E7E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0FFA7513308C038B00229E7E /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0FFA750F308C038B00229E7E /* SmartSpendTests */,
+			);
+			name = SmartSpendTests;
+			packageProductDependencies = (
+			);
+			productName = SmartSpendTests;
+			productReference = 0FFA750E308C038B00229E7E /* SmartSpendTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
@@ -83,6 +151,10 @@
 					0FA5FD44308636D4004801CD = {
 						CreatedOnToolsVersion = 26.3;
 					};
+					0FFA750D308C038B00229E7E = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 0FA5FD44308636D4004801CD;
+					};
 				};
 			};
 			buildConfigurationList = 0FA5FD40308636D3004801CD /* Build configuration list for PBXProject "SmartSpend" */;
@@ -94,18 +166,29 @@
 			);
 			mainGroup = 0FA5FD3C308636D3004801CD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0F50599E308B73160066B8CD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0FA5FD46308636D4004801CD /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				0FA5FD44308636D4004801CD /* SmartSpend */,
+				0FFA750D308C038B00229E7E /* SmartSpendTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0FA5FD43308636D4004801CD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0FFA750C308C038B00229E7E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +205,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0FFA750A308C038B00229E7E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0FFA7513308C038B00229E7E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0FA5FD44308636D4004801CD /* SmartSpend */;
+			targetProxy = 0FFA7512308C038B00229E7E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0FA5FD4E308636F6004801CD /* Debug */ = {
@@ -251,13 +349,18 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z68XQ7HKN7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "SmartSpend uses your calendar to schedule financial reminders";
+				INFOPLIST_KEY_NSCameraUsageDescription = "SmartSpend uses camera to scan recipets and record expenses";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "SmartSpend uses Face ID to protect your financial information";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -282,13 +385,18 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z68XQ7HKN7;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "SmartSpend uses your calendar to schedule financial reminders";
+				INFOPLIST_KEY_NSCameraUsageDescription = "SmartSpend uses camera to scan recipets and record expenses";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "SmartSpend uses Face ID to protect your financial information";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -303,6 +411,50 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		0FFA7515308C038B00229E7E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z68XQ7HKN7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zeena.SmartSpendTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SmartSpend.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SmartSpend";
+			};
+			name = Debug;
+		};
+		0FFA7516308C038B00229E7E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = Z68XQ7HKN7;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.zeena.SmartSpendTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SmartSpend.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SmartSpend";
 			};
 			name = Release;
 		};
@@ -327,7 +479,45 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		0FFA7514308C038B00229E7E /* Build configuration list for PBXNativeTarget "SmartSpendTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0FFA7515308C038B00229E7E /* Debug */,
+				0FFA7516308C038B00229E7E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0F50599E308B73160066B8CD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0F5059A0308B74520066B8CD /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F50599E308B73160066B8CD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		0F5059A2308B747C0066B8CD /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F50599E308B73160066B8CD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		0F5059A4308B74890066B8CD /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F50599E308B73160066B8CD /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 0FA5FD3D308636D3004801CD /* Project object */;
 }

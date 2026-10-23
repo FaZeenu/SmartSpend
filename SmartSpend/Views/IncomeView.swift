@@ -5,7 +5,7 @@ import CoreData
 // This screen displays and manages income records.
 struct IncomeView: View {
 
-    // MARK: Core Data
+    // Core Data
 
     // Access the Core Data database context.
     @Environment(\.managedObjectContext)
@@ -24,7 +24,7 @@ struct IncomeView: View {
     )
     private var incomes: FetchedResults<Income>
 
-    // MARK: State Variables
+    // State Variables
 
     // Controls the Add Income screen.
     @State private var showAddIncome = false
@@ -42,7 +42,7 @@ struct IncomeView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    // MARK: Calculate Total Income
+    // Calculate Total Income
 
     // Calculate the total amount of all saved income.
     private var totalIncome: Double {
@@ -57,7 +57,7 @@ struct IncomeView: View {
         return total
     }
 
-    // MARK: User Interface
+    //  User Interface
 
     var body: some View {
 
@@ -65,7 +65,7 @@ struct IncomeView: View {
 
             VStack(spacing: 15) {
 
-                // MARK: Total Income Card
+                // Total Income Card
 
                 // Display the total income amount.
                 VStack(alignment: .leading, spacing: 10) {
@@ -90,7 +90,7 @@ struct IncomeView: View {
                 )
                 .padding(.horizontal)
 
-                // MARK: Empty State
+                // Empty State
 
                 // Show a message if no income has been added.
                 if incomes.isEmpty {
@@ -112,7 +112,7 @@ struct IncomeView: View {
 
                 } else {
 
-                    // MARK: Income List
+                    // Income List
 
                     // Display all saved income records.
                     List {
@@ -169,7 +169,7 @@ struct IncomeView: View {
 
                                 Divider()
 
-                                // MARK: Edit and Delete Buttons
+                                // Edit and Delete Buttons
 
                                 HStack(spacing: 20) {
 
@@ -215,7 +215,7 @@ struct IncomeView: View {
                 }
             }
 
-            // MARK: Navigation Bar
+            //  Navigation Bar
 
             .navigationTitle("Income History")
 
@@ -236,7 +236,7 @@ struct IncomeView: View {
                 }
             }
 
-            // MARK: Add Income Screen
+            //  Add Income Screen
 
             // Show the Add Income form.
             .sheet(isPresented: $showAddIncome) {
@@ -244,7 +244,7 @@ struct IncomeView: View {
                 AddIncomeView()
             }
 
-            // MARK: Edit Income Screen
+            // Edit Income Screen
 
             // Show the Edit Income form.
             .sheet(item: $selectedIncome) { income in
@@ -252,7 +252,7 @@ struct IncomeView: View {
                 EditIncomeView(income: income)
             }
 
-            // MARK: Delete Confirmation
+            // Delete Confirmation
 
             // Ask the user to confirm before deleting income.
             .alert(
@@ -277,7 +277,7 @@ struct IncomeView: View {
                 )
             }
 
-            // MARK: Error Alert
+            // Error Alert
 
             // Display an error if deletion fails.
             .alert(
@@ -295,7 +295,7 @@ struct IncomeView: View {
         }
     }
 
-    // MARK: Delete Income
+    // Delete Income
 
     // Delete the selected income record from Core Data.
     private func deleteSelectedIncome() {
@@ -335,7 +335,7 @@ struct IncomeView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

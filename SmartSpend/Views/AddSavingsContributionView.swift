@@ -25,7 +25,7 @@ struct AddSavingsContributionView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    // MARK: User Interface
+    //  User Interface
 
     var body: some View {
 
@@ -124,7 +124,7 @@ struct AddSavingsContributionView: View {
         }
     }
 
-    // MARK: Save Contribution
+    // Save Contribution
 
     // This function checks and saves the entered contribution.
     private func saveContribution() {
@@ -191,7 +191,7 @@ struct AddSavingsContributionView: View {
     }
 }
 
-// MARK: Xcode Preview
+//  Xcode Preview
 
 #Preview {
 

@@ -6,7 +6,7 @@ import CoreData
 // This screen displays and manages the user's savings goals.
 struct SavingsGoalsView: View {
 
-    // MARK: Core Data
+    // Core Data
 
     // Access the Core Data database.
     @Environment(\.managedObjectContext)
@@ -25,7 +25,7 @@ struct SavingsGoalsView: View {
     )
     private var goals: FetchedResults<SavingsGoal>
 
-    // MARK: State Variables
+    // State Variables
 
     // Controls the Add Savings Goal screen.
     @State private var showAddGoal = false
@@ -43,7 +43,7 @@ struct SavingsGoalsView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    // MARK: Calculate Total Target
+    // Calculate Total Target
 
     // Calculate the total target amount of all savings goals.
     private var totalTarget: Double {
@@ -57,7 +57,7 @@ struct SavingsGoalsView: View {
         return total
     }
 
-    // MARK: Calculate Total Savings
+    //  Calculate Total Savings
 
     // Calculate the total amount saved across all goals.
     private var totalSaved: Double {
@@ -71,7 +71,7 @@ struct SavingsGoalsView: View {
         return total
     }
 
-    // MARK: Main User Interface
+    //  Main User Interface
 
     var body: some View {
 
@@ -81,7 +81,7 @@ struct SavingsGoalsView: View {
 
                 VStack(alignment: .leading, spacing: 20) {
 
-                    // MARK: Total Savings Card
+                    // Total Savings Card
 
                     // Display the total saved amount and total target.
                     VStack(alignment: .leading, spacing: 10) {
@@ -109,13 +109,13 @@ struct SavingsGoalsView: View {
                         RoundedRectangle(cornerRadius: 18)
                     )
 
-                    // MARK: Savings Goals Heading
+                    // Savings Goals Heading
 
                     Text("My Savings Goals")
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    // MARK: Empty State
+                    //  Empty State
 
                     // Display a message if no savings goals exist.
                     if goals.isEmpty {
@@ -149,7 +149,7 @@ struct SavingsGoalsView: View {
 
                     } else {
 
-                        // MARK: Savings Goals List
+                        // Savings Goals List
 
                         // Display each saved goal using a goal card.
                         ForEach(goals, id: \.objectID) { goal in
@@ -161,7 +161,7 @@ struct SavingsGoalsView: View {
                 .padding()
             }
 
-            // MARK: Navigation Bar
+            // Navigation Bar
 
             .navigationTitle("Savings Goals")
 
@@ -182,14 +182,14 @@ struct SavingsGoalsView: View {
                 }
             }
 
-            // MARK: Add Savings Goal Sheet
+            // Add Savings Goal Sheet
 
             .sheet(isPresented: $showAddGoal) {
 
                 AddSavingsGoalView()
             }
 
-            // MARK: Add Savings Contribution Sheet
+            // Add Savings Contribution Sheet
 
             // Open the contribution form for the selected goal.
             .sheet(item: $selectedGoal) { goal in
@@ -197,7 +197,7 @@ struct SavingsGoalsView: View {
                 AddSavingsContributionView(goal: goal)
             }
 
-            // MARK: Delete Confirmation
+            // Delete Confirmation
 
             .alert(
                 "Delete Savings Goal",
@@ -221,7 +221,7 @@ struct SavingsGoalsView: View {
                 )
             }
 
-            // MARK: Error Alert
+            //  Error Alert
 
             .alert(
                 "Unable to Delete Savings Goal",
@@ -238,7 +238,7 @@ struct SavingsGoalsView: View {
         }
     }
 
-    // MARK: Savings Goal Card
+    // Savings Goal Card
 
     // Create a card to display the details of one savings goal.
     private func goalCard(_ goal: SavingsGoal) -> some View {
@@ -280,7 +280,7 @@ struct SavingsGoalsView: View {
                 Spacer()
             }
 
-            // MARK: Saved and Target Amounts
+            // Saved and Target Amounts
 
             Text("Rs. \(goal.savedAmount, specifier: "%.2f")")
                 .font(.title3)
@@ -290,7 +290,7 @@ struct SavingsGoalsView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
 
-            // MARK: Progress Bar
+            // Progress Bar
 
             // Show how close the user is to completing the goal.
             ProgressView(value: progress)
@@ -311,7 +311,7 @@ struct SavingsGoalsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // MARK: Goal Deadline
+            // Goal Deadline
 
             // Display the deadline if one was provided.
             if let deadline = goal.deadline {
@@ -328,7 +328,7 @@ struct SavingsGoalsView: View {
                 .foregroundStyle(.secondary)
             }
 
-            // MARK: Completed Goal Message
+            // Completed Goal Message
 
             // Show a success message when the goal is completed.
             if goal.targetAmount > 0 &&
@@ -344,7 +344,7 @@ struct SavingsGoalsView: View {
 
             Divider()
 
-            // MARK: Goal Actions
+            // Goal Actions
 
             HStack(spacing: 20) {
 
@@ -398,7 +398,7 @@ struct SavingsGoalsView: View {
         )
     }
 
-    // MARK: Delete Savings Goal
+    // Delete Savings Goal
 
     // Remove the selected savings goal from Core Data.
     private func deleteSelectedGoal() {
@@ -438,7 +438,7 @@ struct SavingsGoalsView: View {
     }
 }
 
-// MARK: Xcode Preview
+//  Xcode Preview
 
 #Preview {
 

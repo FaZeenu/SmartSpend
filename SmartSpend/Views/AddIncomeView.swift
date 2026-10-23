@@ -35,7 +35,7 @@ struct AddIncomeView: View {
         "Other"
     ]
 
-    // MARK: User Interface
+    //User Interface
 
     // Defines what appears on the Add Income screen.
     var body: some View {
@@ -120,7 +120,7 @@ struct AddIncomeView: View {
         }
     }
 
-    // MARK: Save Income
+    // Save Income
 
     // This function validates the details and saves the income.
     private func saveIncome() {
@@ -189,7 +189,7 @@ struct AddIncomeView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 // Displays this screen in the Xcode preview.
 #Preview {

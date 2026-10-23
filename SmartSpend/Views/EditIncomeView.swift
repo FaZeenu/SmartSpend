@@ -38,7 +38,7 @@ struct EditIncomeView: View {
         "Other"
     ]
 
-    // MARK: Initializer
+    // Initializer
 
     // Receive the existing income from IncomeView.
     init(income: Income) {
@@ -53,7 +53,7 @@ struct EditIncomeView: View {
         _notes = State(initialValue: income.notes ?? "")
     }
 
-    // MARK: User Interface
+    //  User Interface
 
     var body: some View {
 
@@ -139,7 +139,7 @@ struct EditIncomeView: View {
         }
     }
 
-    // MARK: Update Income
+    // Update Income
 
     // Validate and save changes to the existing income.
     private func updateIncome() {
@@ -204,7 +204,7 @@ struct EditIncomeView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

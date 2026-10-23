@@ -46,7 +46,7 @@ struct BudgetView: View {
     @State private var showDeleteConfirmation = false
     @State private var showDeleteError = false
 
-    // MARK: Current Month Budgets
+    // Current Month Budgets
 
     // Only display budgets belonging to the current month.
     private var currentMonthBudgets: [Budget] {
@@ -73,7 +73,7 @@ struct BudgetView: View {
         return results
     }
 
-    // MARK: User Interface
+    // User Interface
 
     var body: some View {
 
@@ -158,19 +158,19 @@ struct BudgetView: View {
                 }
             }
 
-            // MARK: Add Budget Sheet
+            // Add Budget Sheet
 
             .sheet(isPresented: $showAddBudget) {
                 AddBudgetView()
             }
 
-            // MARK: Edit Budget Sheet
+            //  Edit Budget Sheet
 
             .sheet(item: $selectedBudget) { budget in
                 EditBudgetView(budget: budget)
             }
 
-            // MARK: Delete Confirmation
+            //  Delete Confirmation
 
             .alert(
                 "Delete Budget",
@@ -206,7 +206,7 @@ struct BudgetView: View {
         }
     }
 
-    // MARK: Budget Card
+    // Budget Card
 
     // Creates the card displayed for each budget.
     private func budgetCard(_ budget: Budget) -> some View {
@@ -303,7 +303,7 @@ struct BudgetView: View {
 
             Divider()
 
-            // MARK: Edit and Delete Buttons
+            // Edit and Delete Buttons
 
             HStack {
 
@@ -347,7 +347,7 @@ struct BudgetView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    // MARK: Calculate Monthly Spending
+    // Calculate Monthly Spending
 
     // Adds expenses from the current month for a category.
     private func calculateSpending(for category: String) -> Double {
@@ -378,7 +378,7 @@ struct BudgetView: View {
         return total
     }
 
-    // MARK: Budget Progress Color
+    // Budget Progress Color
 
     // Choose a color based on spending.
     private func progressColor(
@@ -400,7 +400,7 @@ struct BudgetView: View {
         }
     }
 
-    // MARK: Delete Budget
+    // Delete Budget
 
     // Delete the budget selected by the user.
     private func deleteSelectedBudget() {
@@ -435,7 +435,7 @@ struct BudgetView: View {
     }
 }
 
-// MARK: Xcode Preview
+//  Xcode Preview
 
 #Preview {
 

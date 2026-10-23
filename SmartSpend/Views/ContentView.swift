@@ -4,14 +4,14 @@ import SwiftUI
 // ContentView is the main navigation screen of SmartSpend.
 struct ContentView: View {
 
-    // MARK: Main User Interface
+    //  Main User Interface
 
     var body: some View {
 
         // TabView creates the bottom navigation bar.
         TabView {
 
-            // MARK: Home Tab
+            // Home Tab
 
             // Displays the dashboard with financial summaries.
             HomeView()
@@ -21,7 +21,7 @@ struct ContentView: View {
                     Text("Home")
                 }
 
-            // MARK: Expenses Tab
+            // Expenses Tab
 
             // Displays saved expenses and expense management.
             ExpensesView()
@@ -31,7 +31,7 @@ struct ContentView: View {
                     Text("Expenses")
                 }
 
-            // MARK: Budget Tab
+            // Budget Tab
 
             // Displays monthly budgets and spending progress.
             BudgetView()
@@ -41,7 +41,7 @@ struct ContentView: View {
                     Text("Budget")
                 }
 
-            // MARK: Reports Tab
+            // Reports Tab
 
             // Displays financial reports and charts.
             ReportsView()
@@ -51,7 +51,7 @@ struct ContentView: View {
                     Text("Reports")
                 }
 
-            // MARK: Profile Tab
+            //  Profile Tab
 
             // Displays the user's profile and settings.
             ProfileView()
@@ -67,7 +67,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 // Shows the main navigation screen in Xcode previews.
 #Preview {

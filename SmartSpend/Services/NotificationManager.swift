@@ -2,52 +2,118 @@
 import Foundation
 import UserNotifications
 
-// MARK: - Notification Manager
+// Notification Manager
 
 class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     static let shared = NotificationManager()
 
+    private let notificationCenter = UNUserNotificationCenter.current()
+
     private override init() {
         super.init()
 
-        // Allow notifications to be displayed
-        // even when SmartSpend is open.
-        UNUserNotificationCenter.current().delegate = self
+        // Show notifications even when SmartSpend is open
+        notificationCenter.delegate = self
+
+        // Observe changes to the Budget Alerts setting
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(budgetSettingChanged),
+            name: UserDefaults.didChangeNotification,
+            object: nil
+        )
     }
 
-    // MARK: - Request Notification Permission
+    // Budget Alerts Preference
+
+    // Enabled by default unless the user turns it off
+    private var budgetAlertsEnabled: Bool {
+
+        if UserDefaults.standard.object(
+            forKey: "budgetAlertsEnabled"
+        ) == nil {
+            return true
+        }
+
+        return UserDefaults.standard.bool(
+            forKey: "budgetAlertsEnabled"
+        )
+    }
+
+    // MARK: - Handle Setting Changes
+
+    @objc private func budgetSettingChanged() {
+
+        // Cancel pending budget notifications when disabled
+        if !budgetAlertsEnabled {
+            cancelPendingBudgetAlerts()
+        }
+    }
+
+    // Cancel Pending Budget Alerts
+
+    private func cancelPendingBudgetAlerts() {
+
+        notificationCenter.getPendingNotificationRequests { [weak self] requests in
+
+            guard let self = self else {
+                return
+            }
+
+            let budgetIDs = requests
+                .map { $0.identifier }
+                .filter { $0.hasPrefix("budget-") }
+
+            self.notificationCenter
+                .removePendingNotificationRequests(
+                    withIdentifiers: budgetIDs
+                )
+
+            print("Pending budget alerts cancelled.")
+        }
+    }
+
+    // Request Notification Permission
 
     func requestPermission() {
 
-        UNUserNotificationCenter.current()
-            .requestAuthorization(
-                options: [.alert, .badge, .sound]
-            ) { granted, error in
+        notificationCenter.requestAuthorization(
+            options: [.alert, .badge, .sound]
+        ) { granted, error in
 
-                if let error = error {
-                    print("Notification permission error: \(error.localizedDescription)")
-                    return
-                }
-
-                print("Notification permission granted: \(granted)")
+            if let error = error {
+                print(
+                    "Notification permission error: \(error.localizedDescription)"
+                )
+                return
             }
+
+            print("Notification permission granted: \(granted)")
+        }
     }
 
-    // MARK: - Check Notification Permission
+    // Check Notification Permission
 
     func checkPermissionStatus() {
 
-        UNUserNotificationCenter.current()
-            .getNotificationSettings { settings in
+        notificationCenter.getNotificationSettings { settings in
 
-                print("Notification authorization status: \(settings.authorizationStatus.rawValue)")
-                print("Alert setting: \(settings.alertSetting.rawValue)")
-                print("Sound setting: \(settings.soundSetting.rawValue)")
-            }
+            print(
+                "Notification authorization status: \(settings.authorizationStatus.rawValue)"
+            )
+
+            print(
+                "Alert setting: \(settings.alertSetting.rawValue)"
+            )
+
+            print(
+                "Sound setting: \(settings.soundSetting.rawValue)"
+            )
+        }
     }
 
-    // MARK: - Check Monthly Budget Alert
+    // Check Monthly Budget Alert
 
     func checkBudgetAlert(
         category: String,
@@ -56,6 +122,12 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         month: Date
     ) {
 
+        // Respect the user's Profile setting
+        guard budgetAlertsEnabled else {
+            print("Budget alerts are disabled.")
+            return
+        }
+
         guard limit > 0 else {
             return
         }
@@ -63,6 +135,7 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         let percentage = (spent / limit) * 100
 
         let calendar = Calendar.current
+
         let year = calendar.component(.year, from: month)
         let monthNumber = calendar.component(.month, from: month)
 
@@ -86,7 +159,7 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             newLevel = 80
         }
 
-        // Avoid repeatedly sending the same alert.
+        // Avoid repeatedly sending the same monthly alert
         guard newLevel > 0,
               newLevel > previousLevel else {
 
@@ -99,9 +172,12 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         content.title = "SmartSpend Budget Alert"
 
         if newLevel == 100 {
+
             content.body =
                 "You have reached or exceeded your \(category) budget limit."
+
         } else {
+
             content.body =
                 "You have used at least 80% of your \(category) budget."
         }
@@ -117,23 +193,44 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
             )
         )
 
-        UNUserNotificationCenter.current().add(request) { error in
+        notificationCenter.add(request) { [weak self] error in
 
             if let error = error {
-                print("Budget alert error: \(error.localizedDescription)")
-            } else {
 
-                UserDefaults.standard.set(
-                    newLevel,
-                    forKey: alertKey
+                print(
+                    "Budget alert error: \(error.localizedDescription)"
                 )
 
-                print("Budget alert scheduled: \(category) - \(newLevel)%")
+            } else {
+
+                // Check again in case the user disabled alerts
+                guard let self = self else {
+                    return
+                }
+
+                if self.budgetAlertsEnabled {
+
+                    UserDefaults.standard.set(
+                        newLevel,
+                        forKey: alertKey
+                    )
+
+                    print(
+                        "Budget alert scheduled: \(category) - \(newLevel)%"
+                    )
+
+                } else {
+
+                    self.notificationCenter
+                        .removePendingNotificationRequests(
+                            withIdentifiers: [request.identifier]
+                        )
+                }
             }
         }
     }
 
-    // MARK: - Show Notifications While App Is Open
+    // Show Notifications While App Is Open
 
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -141,6 +238,14 @@ class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler:
             @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+
+        // Suppress budget alerts if the user disabled them
+        if notification.request.identifier.hasPrefix("budget-"),
+           !budgetAlertsEnabled {
+
+            completionHandler([])
+            return
+        }
 
         print("Foreground notification received.")
 

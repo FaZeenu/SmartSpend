@@ -1,14 +1,14 @@
 
 import SwiftUI
 import CoreData
+import FirebaseAuth
+import FirebaseFirestore
 
 // HomeView is the main dashboard of SmartSpend.
 struct HomeView: View {
 
-    // MARK: Fetch Expense Records
+    // Fetch Expense Records
 
-    // Get all expenses from Core Data.
-    // Sort them from newest to oldest.
     @FetchRequest(
         sortDescriptors: [
             NSSortDescriptor(
@@ -20,9 +20,8 @@ struct HomeView: View {
     )
     private var expenses: FetchedResults<Expense>
 
-    // MARK: Fetch Income Records
+    // Fetch Income Records
 
-    // Get all income records from Core Data.
     @FetchRequest(
         sortDescriptors: [
             NSSortDescriptor(
@@ -34,74 +33,75 @@ struct HomeView: View {
     )
     private var incomes: FetchedResults<Income>
 
-    // MARK: State Variables
+    //  State Variables
 
-    // Control which screens are displayed.
     @State private var showAddExpense = false
     @State private var showAddIncome = false
     @State private var showIncomeHistory = false
     @State private var showSavingsGoals = false
 
-    // MARK: Calculate Total Income
+    // Store the logged-in user's first name.
+    @State private var userName = ""
 
-    // Add together all saved income amounts.
+    //  Calculate Total Income
+
     private var totalIncome: Double {
 
         var total = 0.0
 
         for income in incomes {
-            total = total + income.amount
+            total += income.amount
         }
 
         return total
     }
 
-    // MARK: Calculate Total Expenses
+    //  Calculate Total Expenses
 
-    // Add together all saved expense amounts.
     private var totalExpenses: Double {
 
         var total = 0.0
 
         for expense in expenses {
-            total = total + expense.amount
+            total += expense.amount
         }
 
         return total
     }
 
-    // MARK: Calculate Total Balance
+    //  Calculate Total Balance
 
-    // Balance = Total Income - Total Expenses
     private var totalBalance: Double {
-
-        return totalIncome - totalExpenses
+        totalIncome - totalExpenses
     }
 
-    // MARK: Main Dashboard
+    // Main Dashboard
 
     var body: some View {
 
         NavigationStack {
 
-            // Allow the dashboard to scroll vertically.
             ScrollView {
 
                 VStack(alignment: .leading, spacing: 20) {
 
-                    // MARK: Welcome Section
+                    //  - Welcome Section
 
                     HStack {
 
                         VStack(alignment: .leading, spacing: 5) {
 
-                            Text("Hello, Welcome Back!")
-                                .font(.title2)
-                                .fontWeight(.bold)
+                            Text(
+                                "Hello, \(userName.isEmpty ? "there" : userName)! "
+                            )
+                            .font(.title)
+                            .fontWeight(.bold)
 
-                            Text("Here's your financial overview")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                            Text(
+                                "Welcome back! Here's your financial overview."
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                         }
 
                         Spacer()
@@ -111,7 +111,7 @@ struct HomeView: View {
                             .foregroundStyle(.purple)
                     }
 
-                    // MARK: Total Balance Card
+                    // Total Balance Card
 
                     VStack(alignment: .leading, spacing: 12) {
 
@@ -119,9 +119,11 @@ struct HomeView: View {
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.8))
 
-                        Text("Rs. \(totalBalance, specifier: "%.2f")")
-                            .font(.system(size: 30, weight: .bold))
-                            .foregroundStyle(.white)
+                        Text(
+                            "Rs. \(totalBalance, specifier: "%.2f")"
+                        )
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(.white)
 
                         Text("Your available balance")
                             .font(.caption)
@@ -137,11 +139,10 @@ struct HomeView: View {
                         RoundedRectangle(cornerRadius: 20)
                     )
 
-                    // MARK: Income and Expense Summary
+                    // Income and Expense Summary
 
                     HStack(spacing: 15) {
 
-                        // Income summary card.
                         summaryCard(
                             title: "Income",
                             amount: totalIncome,
@@ -149,7 +150,6 @@ struct HomeView: View {
                             color: .green
                         )
 
-                        // Expense summary card.
                         summaryCard(
                             title: "Expenses",
                             amount: totalExpenses,
@@ -158,18 +158,15 @@ struct HomeView: View {
                         )
                     }
 
-                    // MARK: Quick Actions
+                    // Quick Actions
 
                     Text("Quick Actions")
                         .font(.headline)
 
                     HStack(spacing: 15) {
 
-                        // Open Add Expense screen.
                         Button {
-
                             showAddExpense = true
-
                         } label: {
 
                             quickAction(
@@ -179,11 +176,8 @@ struct HomeView: View {
                         }
                         .buttonStyle(.plain)
 
-                        // Open Add Income screen.
                         Button {
-
                             showAddIncome = true
-
                         } label: {
 
                             quickAction(
@@ -194,12 +188,10 @@ struct HomeView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // MARK: Income History
+                    // Income History
 
                     Button {
-
                         showIncomeHistory = true
-
                     } label: {
 
                         HStack(spacing: 15) {
@@ -225,12 +217,10 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // MARK: Savings Goals
+                    // Savings Goals
 
                     Button {
-
                         showSavingsGoals = true
-
                     } label: {
 
                         HStack(spacing: 15) {
@@ -256,12 +246,11 @@ struct HomeView: View {
                     }
                     .buttonStyle(.plain)
 
-                    // MARK: Recent Transactions
+                    // Recent Transactions
 
                     Text("Recent Transactions")
                         .font(.headline)
 
-                    // Display a message if no expenses exist.
                     if expenses.isEmpty {
 
                         VStack(spacing: 10) {
@@ -278,7 +267,6 @@ struct HomeView: View {
 
                     } else {
 
-                        // Show only the five most recent expenses.
                         VStack(spacing: 15) {
 
                             ForEach(
@@ -299,41 +287,96 @@ struct HomeView: View {
                 }
                 .padding()
             }
-            .navigationTitle("Dashboard")
 
-            // MARK: Add Expense Screen
+            // Hide the Dashboard navigation heading.
+            .toolbar(.hidden, for: .navigationBar)
+
+            // Load the registered user's name.
+            .task {
+                await loadUserName()
+            }
+
+            // Add Expense Screen
 
             .sheet(isPresented: $showAddExpense) {
-
                 AddExpenseView()
             }
 
-            // MARK: Add Income Screen
+            // dd Income Screen
 
             .sheet(isPresented: $showAddIncome) {
-
                 AddIncomeView()
             }
 
-            // MARK: Income History Screen
+            //  Income History Screen
 
             .sheet(isPresented: $showIncomeHistory) {
-
                 IncomeView()
             }
 
-            // MARK: Savings Goals Screen
+            // Savings Goals Screen
 
             .sheet(isPresented: $showSavingsGoals) {
-
                 SavingsGoalsView()
             }
         }
     }
 
-    // MARK: Summary Card
+    //  Load User Name from Firebase
 
-    // Reusable card for displaying income or expenses.
+    private func loadUserName() async {
+
+        guard let user = Auth.auth().currentUser else {
+            userName = ""
+            return
+        }
+
+        // First try the Firebase Authentication display name.
+        let displayName = user.displayName?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if !displayName.isEmpty {
+            userName = firstName(from: displayName)
+            return
+        }
+
+        // If unavailable, read the name saved during registration.
+        do {
+
+            let document = try await Firestore.firestore()
+                .collection("users")
+                .document(user.uid)
+                .getDocument()
+
+            let registeredName = document.data()?["name"] as? String ?? ""
+
+            if !registeredName.isEmpty {
+                userName = firstName(from: registeredName)
+            } else {
+                userName = "there"
+            }
+
+        } catch {
+
+            print(
+                "Could not load user name: \(error.localizedDescription)"
+            )
+
+            userName = "there"
+        }
+    }
+
+    // Return only the first part of the user's name.
+    private func firstName(from fullName: String) -> String {
+
+        fullName
+            .split(separator: " ")
+            .first
+            .map(String.init) ?? "there"
+    }
+
+    // Summary Card
+
     private func summaryCard(
         title: String,
         amount: Double,
@@ -365,9 +408,8 @@ struct HomeView: View {
         )
     }
 
-    // MARK: Quick Action Card
+    // Quick Action Card
 
-    // Reusable design for Add Expense and Add Income.
     private func quickAction(
         title: String,
         icon: String
@@ -390,9 +432,8 @@ struct HomeView: View {
         )
     }
 
-    // MARK: Transaction Row
+    // Transaction Row
 
-    // Display one expense in the recent transactions list.
     private func transactionRow(
         title: String,
         amount: Double,
@@ -421,39 +462,40 @@ struct HomeView: View {
         }
     }
 
-    // MARK: Expense Category Icons
+    // Expense Category Icons
 
-    // Return a different icon for each expense category.
     private func categoryIcon(for category: String) -> String {
 
-        if category == "Food" {
+        switch category {
+
+        case "Food":
             return "fork.knife"
 
-        } else if category == "Transport" {
+        case "Transport":
             return "car.fill"
 
-        } else if category == "Shopping" {
+        case "Shopping":
             return "bag.fill"
 
-        } else if category == "Education" {
+        case "Education":
             return "book.fill"
 
-        } else if category == "Bills" {
+        case "Bills":
             return "doc.text.fill"
 
-        } else if category == "Health" {
+        case "Health":
             return "cross.case.fill"
 
-        } else if category == "Entertainment" {
+        case "Entertainment":
             return "film.fill"
 
-        } else {
+        default:
             return "creditcard.fill"
         }
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

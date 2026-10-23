@@ -2,6 +2,8 @@
 import Foundation
 import SwiftUI
 import CoreData
+import FirebaseAuth
+import FirebaseFirestore
 
 // This screen allows users to add a new expense.
 struct AddExpenseView: View {
@@ -25,6 +27,9 @@ struct AddExpenseView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
+    // Prevent saving multiple times.
+    @State private var isSaving = false
+
     // Available expense categories.
     private let categories = [
         "Food",
@@ -37,7 +42,7 @@ struct AddExpenseView: View {
         "Other"
     ]
 
-    // MARK: - User Interface
+    // User Interface
 
     var body: some View {
 
@@ -75,14 +80,52 @@ struct AddExpenseView: View {
                         text: $notes
                     )
                 }
+                
+                
+                // MARK: - Receipt Scanning
+
+                Section("Receipt Scanner") {
+
+                    NavigationLink {
+
+                        ReceiptScannerView { receipt in
+
+                            // Automatically fill the expense form.
+                            title = receipt.merchant
+                            amount = receipt.amount
+                            date = receipt.date
+
+                            // Keep recognized receipt text as notes.
+                            notes = receipt.notes
+                        }
+
+                    } label: {
+
+                        Label(
+                            "Scan Receipt with Camera",
+                            systemImage: "camera.viewfinder"
+                        )
+                        .foregroundStyle(.purple)
+                    }
+                }
+
 
                 // Save expense button.
                 Section {
 
-                    Button("Save Expense") {
+                    Button {
                         saveExpense()
+                    } label: {
+
+                        if isSaving {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text("Save Expense")
+                                .frame(maxWidth: .infinity)
+                        }
                     }
-                    .frame(maxWidth: .infinity)
+                    .disabled(isSaving)
                     .foregroundStyle(.white)
                     .listRowBackground(Color.purple)
                 }
@@ -116,7 +159,7 @@ struct AddExpenseView: View {
         }
     }
 
-    // MARK: - Save Expense
+    //  Save Expense
 
     private func saveExpense() {
 
@@ -148,11 +191,24 @@ struct AddExpenseView: View {
             return
         }
 
-        // Create a new expense in Core Data.
+        // Make sure a Firebase user is logged in.
+        guard let userId = Auth.auth().currentUser?.uid else {
+
+            errorMessage = "Please log in before saving an expense."
+            showError = true
+            return
+        }
+
+        isSaving = true
+
+        // Create a new expense in Core Data
         let newExpense = Expense(context: viewContext)
 
-        // Assign the entered details.
-        newExpense.id = UUID()
+        // Create one ID for both databases
+        let expenseId = UUID()
+
+        // Assign the entered details
+        newExpense.id = expenseId
         newExpense.title = cleanedTitle
         newExpense.amount = expenseAmount
         newExpense.category = category
@@ -161,22 +217,39 @@ struct AddExpenseView: View {
 
         do {
 
-            // Save the expense to the database.
+            // Save the expense to Core Data
             try viewContext.save()
 
-            print("Expense saved successfully.")
+            print("Expense saved to Core Data successfully.")
 
-            // Check the monthly budget after saving.
+            // Check the monthly budget after saving
             checkBudgetAfterSaving()
 
-            // Close the screen.
-            dismiss()
+            // Save a copy to Firebase
+            Task {
+
+                await saveExpenseToFirebase(
+                    userId: userId,
+                    id: expenseId,
+                    title: cleanedTitle,
+                    amount: expenseAmount,
+                    category: category,
+                    date: date,
+                    notes: notes
+                )
+
+                isSaving = false
+
+                // Close the screen after the Firebase attempt
+                dismiss()
+            }
 
         } catch {
 
-            // Undo unsaved changes if saving fails.
+            // Undo unsaved Core Data changes
             viewContext.rollback()
 
+            isSaving = false
             errorMessage = "Could not save the expense."
             showError = true
 
@@ -186,7 +259,50 @@ struct AddExpenseView: View {
         }
     }
 
-    // MARK: - Check Budget After Saving
+    // Save Expense to Firebase
+
+    private func saveExpenseToFirebase(
+        userId: String,
+        id: UUID,
+        title: String,
+        amount: Double,
+        category: String,
+        date: Date,
+        notes: String
+    ) async {
+
+        do {
+
+            // Store expenses inside the logged-in user's account.
+            try await Firestore.firestore()
+                .collection("users")
+                .document(userId)
+                .collection("expenses")
+                .document(id.uuidString)
+                .setData([
+                    "title": title,
+                    "amount": amount,
+                    "category": category,
+                    "date": Timestamp(date: date),
+                    "notes": notes
+                ])
+
+            print("Expense saved to Firebase successfully.")
+
+        } catch {
+
+            // The expense is still saved in Core Data
+            print(
+                "Firebase expense error: \(error.localizedDescription)"
+            )
+
+            // Inform the user that cloud saving failed
+            errorMessage = "Expense saved locally, but Firebase saving failed."
+            showError = true
+        }
+    }
+
+    // Check Budget After Saving
 
     private func checkBudgetAfterSaving() {
 
@@ -215,12 +331,12 @@ struct AddExpenseView: View {
             return
         }
 
-        // MARK: Find Matching Budget
+        // Find Matching Budget
 
         let budgetRequest: NSFetchRequest<Budget> =
             Budget.fetchRequest()
 
-        // Search the entire month rather than one exact date.
+        // Search for the budget in the selected month
         budgetRequest.predicate = NSPredicate(
             format: "category == %@ AND month >= %@ AND month < %@",
             category,
@@ -234,12 +350,11 @@ struct AddExpenseView: View {
                 budgetRequest
             )
 
-            // Debugging information.
             print(
                 "Matching budgets found: \(matchingBudgets.count)"
             )
 
-            // Stop if no budget exists for this category/month.
+            // Stop if no matching budget exists
             guard let budget = matchingBudgets.first else {
 
                 print(
@@ -248,12 +363,12 @@ struct AddExpenseView: View {
                 return
             }
 
-            // MARK: Find Monthly Expenses
+            // Find Monthly Expenses
 
             let expenseRequest: NSFetchRequest<Expense> =
                 Expense.fetchRequest()
 
-            // Retrieve expenses for the same category and month.
+            // Find expenses for the same category and month
             expenseRequest.predicate = NSPredicate(
                 format: "category == %@ AND date >= %@ AND date < %@",
                 category,
@@ -265,23 +380,24 @@ struct AddExpenseView: View {
                 expenseRequest
             )
 
-            // Calculate total monthly spending.
+            // Calculate total spending
             let totalSpent = monthlyExpenses.reduce(0.0) {
                 $0 + $1.amount
             }
 
-            // Calculate spending percentage.
+            // Make sure the budget is valid
             guard budget.amount > 0 else {
 
                 print("Budget amount must be greater than zero.")
                 return
             }
 
+            // Calculate spending percentage
             let percentage = (
                 totalSpent / budget.amount
             ) * 100
 
-            // MARK: Debugging Information
+            // Debugging Information
 
             print("----- SMARTSPEND BUDGET CHECK -----")
             print("Category: \(category)")
@@ -292,7 +408,7 @@ struct AddExpenseView: View {
             print("Budget used: \(percentage)%")
             print("-----------------------------------")
 
-            // MARK: Trigger Budget Notification
+            //  Trigger Budget Notification
 
             NotificationManager.shared.checkBudgetAlert(
                 category: category,
@@ -305,8 +421,7 @@ struct AddExpenseView: View {
 
         } catch {
 
-            // The expense has already been saved.
-            // Budget checking errors should not undo it.
+            // Budget errors should not undo the saved expense.
             print(
                 "Budget checking error: \(error.localizedDescription)"
             )
@@ -314,7 +429,7 @@ struct AddExpenseView: View {
     }
 }
 
-// MARK: - Xcode Preview
+// Xcode Preview
 
 #Preview {
 

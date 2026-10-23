@@ -24,7 +24,7 @@ struct AddSavingsGoalView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    // MARK: User Interface
+    // User Interface
 
     // Defines the Add Savings Goal screen.
     var body: some View {
@@ -103,7 +103,7 @@ struct AddSavingsGoalView: View {
         }
     }
 
-    // MARK: Save Savings Goal
+    // Save Savings Goal
 
     // This function checks the details and saves the goal.
     private func saveGoal() {
@@ -205,7 +205,7 @@ struct AddSavingsGoalView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

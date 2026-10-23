@@ -1,6 +1,8 @@
 
 import SwiftUI
 import CoreData
+import FirebaseAuth
+import FirebaseFirestore
 
 // This screen displays and manages all recorded expenses.
 struct ExpensesView: View {
@@ -9,7 +11,7 @@ struct ExpensesView: View {
     @Environment(\.managedObjectContext)
     private var viewContext
 
-    // MARK: Fetch Expenses
+    // Fetch Expenses
 
     // Automatically fetch saved expenses from Core Data.
     // The newest expenses appear first.
@@ -24,7 +26,7 @@ struct ExpensesView: View {
     )
     private var expenses: FetchedResults<Expense>
 
-    // MARK: State Variables
+    //  State Variables
 
     // Controls the Add Expense screen.
     @State private var showAddExpense = false
@@ -41,8 +43,11 @@ struct ExpensesView: View {
     // Controls error alerts.
     @State private var showError = false
     @State private var errorMessage = ""
+    
+    // Prevent multiple deletions at the same time.
+    @State private var isDeleting = false
 
-    // MARK: Calculate Total Expenses
+    // Calculate Total Expenses
 
     // Calculate the total amount of all saved expenses.
     private var totalExpenses: Double {
@@ -57,7 +62,7 @@ struct ExpensesView: View {
         return total
     }
 
-    // MARK: User Interface
+    //  User Interface
 
     var body: some View {
 
@@ -65,7 +70,7 @@ struct ExpensesView: View {
 
             VStack(spacing: 15) {
 
-                // MARK: Total Expenses Card
+                // Total Expenses Card
 
                 // Display the total spending amount.
                 VStack(alignment: .leading, spacing: 10) {
@@ -90,7 +95,7 @@ struct ExpensesView: View {
                 )
                 .padding(.horizontal)
 
-                // MARK: Empty State
+                // Empty State
 
                 // Show a message when no expenses exist.
                 if expenses.isEmpty {
@@ -112,7 +117,7 @@ struct ExpensesView: View {
 
                 } else {
 
-                    // MARK: Expense List
+                    // Expense List
 
                     // Display all saved expenses.
                     List {
@@ -170,7 +175,7 @@ struct ExpensesView: View {
 
                                 Divider()
 
-                                // MARK: Edit and Delete Buttons
+                                // Edit and Delete Buttons
 
                                 HStack(spacing: 20) {
 
@@ -190,6 +195,9 @@ struct ExpensesView: View {
                                         .foregroundStyle(.purple)
                                     }
                                     .buttonStyle(.plain)
+                                    
+                                    //prevents repeated delete requests
+                                    .disabled(isDeleting)
 
                                     // Ask for confirmation before deleting.
                                     Button {
@@ -216,7 +224,7 @@ struct ExpensesView: View {
                 }
             }
 
-            // MARK: Navigation Bar
+            // Navigation Bar
 
             .navigationTitle("Expenses")
 
@@ -237,7 +245,7 @@ struct ExpensesView: View {
                 }
             }
 
-            // MARK: Add Expense Sheet
+            //  Add Expense Sheet
 
             // Display the Add Expense form.
             .sheet(isPresented: $showAddExpense) {
@@ -245,7 +253,7 @@ struct ExpensesView: View {
                 AddExpenseView()
             }
 
-            // MARK: Edit Expense Sheet
+            //  Edit Expense Sheet
 
             // Display the Edit Expense form.
             .sheet(item: $selectedExpense) { expense in
@@ -253,7 +261,7 @@ struct ExpensesView: View {
                 EditExpenseView(expense: expense)
             }
 
-            // MARK: Delete Confirmation
+            // Delete Confirmation
 
             // Ask the user before deleting an expense.
             .alert(
@@ -278,7 +286,7 @@ struct ExpensesView: View {
                 )
             }
 
-            // MARK: Error Alert
+            //  Error Alert
 
             // Show an error if deleting an expense fails.
             .alert(
@@ -296,46 +304,102 @@ struct ExpensesView: View {
         }
     }
 
-    // MARK: Delete Expense
+   
+    // Delete Expense from Firebase and Core Data
 
-    // Remove the selected expense from Core Data.
     private func deleteSelectedExpense() {
 
-        // Check whether an expense was selected.
+        // Step 1: Check whether an expense was selected.
         guard let expense = expenseToDelete else {
             return
         }
 
-        // Mark the expense for deletion.
-        viewContext.delete(expense)
+        // Step 2: Check whether the user is logged in.
+        guard let userId = Auth.auth().currentUser?.uid else {
 
-        do {
-
-            // Save the deletion permanently.
-            try viewContext.save()
-
-            // Clear the selected expense.
-            expenseToDelete = nil
-
-        } catch {
-
-            // Undo the deletion if saving fails.
-            viewContext.rollback()
-
-            // Display an error message.
-            errorMessage = "Could not delete the expense. Please try again."
+            errorMessage = "Please log in before deleting an expense."
             showError = true
+            return
+        }
 
-            print(
-                "Failed to delete expense: \(error.localizedDescription)"
-            )
+        // Step 3: Get the existing expense ID.
+        guard let expenseId = expense.id else {
 
-            expenseToDelete = nil
+            errorMessage = "This expense does not have a valid ID."
+            showError = true
+            return
+        }
+
+        // Prevent repeated delete requests.
+        guard !isDeleting else {
+            return
+        }
+
+        isDeleting = true
+
+        // Step 4: Delete the expense from Firebase.
+        Task {
+
+            do {
+
+                try await Firestore.firestore()
+                    .collection("users")
+                    .document(userId)
+                    .collection("expenses")
+                    .document(expenseId.uuidString)
+                    .delete()
+
+                print("Expense deleted from Firebase successfully.")
+
+                // Step 5: Delete the same expense from Core Data.
+                viewContext.delete(expense)
+
+                do {
+
+                    try viewContext.save()
+
+                    print("Expense deleted from Core Data successfully.")
+
+                    // Clear the selected expense.
+                    expenseToDelete = nil
+
+                } catch {
+
+                    // Undo the unsaved local deletion.
+                    viewContext.rollback()
+
+                    errorMessage =
+                        "Expense deleted from Firebase, but local deletion failed."
+
+                    showError = true
+
+                    print(
+                        "Core Data deletion error: \(error.localizedDescription)"
+                    )
+                }
+
+            } catch {
+
+                // Firebase deletion failed.
+                // Keep the local expense unchanged.
+                errorMessage =
+                    "Could not delete the expense from Firebase. Please check your internet connection and try again."
+
+                showError = true
+
+                print(
+                    "Firebase deletion error: \(error.localizedDescription)"
+                )
+            }
+
+            // Allow another deletion.
+            isDeleting = false
         }
     }
+
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 

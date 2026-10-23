@@ -2,6 +2,8 @@
 import Foundation
 import SwiftUI
 import CoreData
+import FirebaseAuth
+import FirebaseFirestore
 
 // This screen allows users to edit an existing expense.
 struct EditExpenseView: View {
@@ -28,6 +30,9 @@ struct EditExpenseView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
+    // Prevent repeated button taps.
+    @State private var isSaving = false
+
     // Available expense categories.
     private let categories = [
         "Food",
@@ -40,7 +45,7 @@ struct EditExpenseView: View {
         "Other"
     ]
 
-    // MARK: User Interface
+    //  User Interface
 
     var body: some View {
 
@@ -84,10 +89,24 @@ struct EditExpenseView: View {
                 // Button to save the changes.
                 Section {
 
-                    Button("Update Expense") {
+                    Button {
+
                         updateExpense()
+
+                    } label: {
+
+                        if isSaving {
+
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+
+                        } else {
+
+                            Text("Update Expense")
+                                .frame(maxWidth: .infinity)
+                        }
                     }
-                    .frame(maxWidth: .infinity)
+                    .disabled(isSaving)
                     .foregroundStyle(.white)
                     .listRowBackground(Color.purple)
                 }
@@ -103,6 +122,7 @@ struct EditExpenseView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isSaving)
                 }
             }
 
@@ -117,8 +137,7 @@ struct EditExpenseView: View {
                 isPresented: $showError
             ) {
 
-                Button("OK", role: .cancel) {
-                }
+                Button("OK", role: .cancel) {}
 
             } message: {
 
@@ -127,7 +146,7 @@ struct EditExpenseView: View {
         }
     }
 
-    // MARK: Load Expense Details
+    // Load Expense Details
 
     // Fill the form with the existing expense information.
     private func loadExpenseDetails() {
@@ -139,7 +158,7 @@ struct EditExpenseView: View {
         notes = expense.notes ?? ""
     }
 
-    // MARK: Update Expense
+    // Update Expense
 
     // Validate the changes and update the existing expense.
     private func updateExpense() {
@@ -157,7 +176,7 @@ struct EditExpenseView: View {
             return
         }
 
-        // Step 2: Convert the amount from text to a number.
+        // Step 2: Convert the amount into a number.
         guard let expenseAmount = Double(amount) else {
 
             errorMessage = "Please enter a valid amount."
@@ -165,7 +184,7 @@ struct EditExpenseView: View {
             return
         }
 
-        // Step 3: Check that the amount is positive and valid.
+        // Step 3: Check that the amount is positive.
         if !expenseAmount.isFinite || expenseAmount <= 0 {
 
             errorMessage = "Amount must be greater than zero."
@@ -173,7 +192,32 @@ struct EditExpenseView: View {
             return
         }
 
-        // Step 4: Update the existing expense information.
+        // Step 4: Check Firebase authentication.
+        guard let userId = Auth.auth().currentUser?.uid else {
+
+            errorMessage = "Please log in before updating an expense."
+            showError = true
+            return
+        }
+
+        // Step 5: Get the expense ID.
+        guard let expenseId = expense.id else {
+
+            errorMessage = "This expense does not have a valid ID."
+            showError = true
+            return
+        }
+
+        isSaving = true
+
+        // Remember the previous values in case saving fails.
+        let oldTitle = expense.title
+        let oldAmount = expense.amount
+        let oldCategory = expense.category
+        let oldDate = expense.date
+        let oldNotes = expense.notes
+
+        // Step 6: Update the existing Core Data expense.
         expense.title = expenseTitle
         expense.amount = expenseAmount
         expense.category = category
@@ -182,19 +226,42 @@ struct EditExpenseView: View {
 
         do {
 
-            // Step 5: Save the changes to Core Data.
+            // Step 7: Save changes to Core Data.
             try viewContext.save()
 
-            // Step 6: Check the budget after updating.
+            print("Expense updated in Core Data successfully.")
+
+            // Step 8: Check the budget after updating.
             checkBudgetAfterUpdating()
 
-            // Close the screen.
-            dismiss()
+            // Step 9: Update the same expense in Firebase.
+            Task {
+
+                await updateExpenseInFirebase(
+                    userId: userId,
+                    expenseId: expenseId,
+                    title: expenseTitle,
+                    amount: expenseAmount,
+                    category: category,
+                    date: date,
+                    notes: notes
+                )
+
+                isSaving = false
+            }
 
         } catch {
 
-            // Undo unsaved changes if saving fails.
+            // Undo the unsaved changes.
             viewContext.rollback()
+
+            expense.title = oldTitle
+            expense.amount = oldAmount
+            expense.category = oldCategory
+            expense.date = oldDate
+            expense.notes = oldNotes
+
+            isSaving = false
 
             errorMessage = "Could not update the expense."
             showError = true
@@ -205,7 +272,54 @@ struct EditExpenseView: View {
         }
     }
 
-    // MARK: Check Budget After Updating
+    // Update Expense in Firebase
+
+    private func updateExpenseInFirebase(
+        userId: String,
+        expenseId: UUID,
+        title: String,
+        amount: Double,
+        category: String,
+        date: Date,
+        notes: String
+    ) async {
+
+        do {
+
+            // Update the expense using its existing UUID.
+            try await Firestore.firestore()
+                .collection("users")
+                .document(userId)
+                .collection("expenses")
+                .document(expenseId.uuidString)
+                .setData([
+                    "title": title,
+                    "amount": amount,
+                    "category": category,
+                    "date": Timestamp(date: date),
+                    "notes": notes
+                ], merge: true)
+
+            print("Expense updated in Firebase successfully.")
+
+            // Close the screen after saving.
+            dismiss()
+
+        } catch {
+
+            print(
+                "Firebase update error: \(error.localizedDescription)"
+            )
+
+            // Core Data was already updated.
+            errorMessage =
+                "Expense updated locally, but Firebase updating failed."
+
+            showError = true
+        }
+    }
+
+    //  Check Budget After Updating
 
     // Check whether the updated expense affects a monthly budget.
     private func checkBudgetAfterUpdating() {
@@ -233,18 +347,23 @@ struct EditExpenseView: View {
             return
         }
 
-        // Search for a budget matching the category and month.
-        let budgetRequest: NSFetchRequest<Budget> = Budget.fetchRequest()
+        // Search for the budget in the selected month.
+        let budgetRequest: NSFetchRequest<Budget> =
+            Budget.fetchRequest()
 
+        // Match the entire month, not only one exact date.
         budgetRequest.predicate = NSPredicate(
-            format: "category == %@ AND month == %@",
+            format: "category == %@ AND month >= %@ AND month < %@",
             category,
-            selectedMonth as NSDate
+            selectedMonth as NSDate,
+            nextMonth as NSDate
         )
 
         do {
 
-            let matchingBudgets = try viewContext.fetch(budgetRequest)
+            let matchingBudgets = try viewContext.fetch(
+                budgetRequest
+            )
 
             // Stop if there is no matching budget.
             guard let budget = matchingBudgets.first else {
@@ -252,7 +371,8 @@ struct EditExpenseView: View {
             }
 
             // Find expenses in the same category and month.
-            let expenseRequest: NSFetchRequest<Expense> = Expense.fetchRequest()
+            let expenseRequest: NSFetchRequest<Expense> =
+                Expense.fetchRequest()
 
             expenseRequest.predicate = NSPredicate(
                 format: "category == %@ AND date >= %@ AND date < %@",
@@ -261,16 +381,16 @@ struct EditExpenseView: View {
                 nextMonth as NSDate
             )
 
-            let monthlyExpenses = try viewContext.fetch(expenseRequest)
+            let monthlyExpenses = try viewContext.fetch(
+                expenseRequest
+            )
 
-            // Calculate the total spending.
-            var totalSpent = 0.0
-
-            for monthlyExpense in monthlyExpenses {
-                totalSpent = totalSpent + monthlyExpense.amount
+            // Calculate total monthly spending.
+            let totalSpent = monthlyExpenses.reduce(0.0) {
+                $0 + $1.amount
             }
 
-            // Check whether a budget warning should be scheduled.
+            // Check whether a budget warning is needed.
             NotificationManager.shared.checkBudgetAlert(
                 category: category,
                 spent: totalSpent,
@@ -278,13 +398,15 @@ struct EditExpenseView: View {
                 month: selectedMonth
             )
 
+            print("Budget checked after expense update.")
+
         } catch {
 
-            // The expense update is already saved.
-            // A budget-checking error should not undo it.
+            // Budget errors should not undo the expense update.
             print(
                 "Budget checking error: \(error.localizedDescription)"
             )
         }
     }
 }
+

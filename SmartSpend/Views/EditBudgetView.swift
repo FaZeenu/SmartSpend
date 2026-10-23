@@ -25,7 +25,7 @@ struct EditBudgetView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    // MARK: Initializer
+    // Initializer
 
     // Receives the selected budget from BudgetView.
     init(budget: Budget) {
@@ -38,7 +38,7 @@ struct EditBudgetView: View {
         )
     }
 
-    // MARK: User Interface
+    // User Interface
 
     var body: some View {
 
@@ -131,7 +131,7 @@ struct EditBudgetView: View {
         }
     }
 
-    // MARK: Update Budget
+    // Update Budget
 
     // This function validates and saves the new budget amount.
     private func updateBudget() {
@@ -179,7 +179,7 @@ struct EditBudgetView: View {
     }
 }
 
-// MARK: Xcode Preview
+// Xcode Preview
 
 #Preview {
 
