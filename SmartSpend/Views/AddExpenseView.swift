@@ -37,7 +37,7 @@ struct AddExpenseView: View {
         "Other"
     ]
 
-    // MARK: User Interface
+    // MARK: - User Interface
 
     var body: some View {
 
@@ -107,8 +107,7 @@ struct AddExpenseView: View {
                 isPresented: $showError
             ) {
 
-                Button("OK", role: .cancel) {
-                }
+                Button("OK", role: .cancel) {}
 
             } message: {
 
@@ -117,21 +116,23 @@ struct AddExpenseView: View {
         }
     }
 
-    // MARK: Save Expense
+    // MARK: - Save Expense
 
     private func saveExpense() {
 
         // Check that the title is not empty.
-        if title.trimmingCharacters(
+        let cleanedTitle = title.trimmingCharacters(
             in: .whitespacesAndNewlines
-        ).isEmpty {
+        )
+
+        if cleanedTitle.isEmpty {
 
             errorMessage = "Please enter an expense title."
             showError = true
             return
         }
 
-        // Convert the amount from text into a number.
+        // Convert the entered amount into a number.
         guard let expenseAmount = Double(amount) else {
 
             errorMessage = "Please enter a valid amount."
@@ -139,7 +140,7 @@ struct AddExpenseView: View {
             return
         }
 
-        // The amount must be a valid positive number.
+        // Amount must be positive and finite.
         if !expenseAmount.isFinite || expenseAmount <= 0 {
 
             errorMessage = "Amount must be greater than zero."
@@ -152,7 +153,7 @@ struct AddExpenseView: View {
 
         // Assign the entered details.
         newExpense.id = UUID()
-        newExpense.title = title
+        newExpense.title = cleanedTitle
         newExpense.amount = expenseAmount
         newExpense.category = category
         newExpense.date = date
@@ -163,7 +164,9 @@ struct AddExpenseView: View {
             // Save the expense to the database.
             try viewContext.save()
 
-            // Check whether the budget limit has been reached.
+            print("Expense saved successfully.")
+
+            // Check the monthly budget after saving.
             checkBudgetAfterSaving()
 
             // Close the screen.
@@ -183,53 +186,74 @@ struct AddExpenseView: View {
         }
     }
 
-    // MARK: Check Budget After Saving
+    // MARK: - Check Budget After Saving
 
     private func checkBudgetAfterSaving() {
 
-        // Find the first day of the selected expense month.
         let calendar = Calendar.current
 
-        let monthComponents = calendar.dateComponents(
-            [.year, .month],
-            from: date
-        )
-
+        // Find the first day of the expense month.
         guard let selectedMonth = calendar.date(
-            from: monthComponents
+            from: calendar.dateComponents(
+                [.year, .month],
+                from: date
+            )
         ) else {
+
+            print("Could not determine the selected month.")
             return
         }
 
-        // Search for the budget matching the category and month.
-        let budgetRequest: NSFetchRequest<Budget> = Budget.fetchRequest()
+        // Find the beginning of the following month.
+        guard let nextMonth = calendar.date(
+            byAdding: .month,
+            value: 1,
+            to: selectedMonth
+        ) else {
 
+            print("Could not determine the next month.")
+            return
+        }
+
+        // MARK: Find Matching Budget
+
+        let budgetRequest: NSFetchRequest<Budget> =
+            Budget.fetchRequest()
+
+        // Search the entire month rather than one exact date.
         budgetRequest.predicate = NSPredicate(
-            format: "category == %@ AND month == %@",
+            format: "category == %@ AND month >= %@ AND month < %@",
             category,
-            selectedMonth as NSDate
+            selectedMonth as NSDate,
+            nextMonth as NSDate
         )
 
         do {
 
-            let matchingBudgets = try viewContext.fetch(budgetRequest)
+            let matchingBudgets = try viewContext.fetch(
+                budgetRequest
+            )
 
-            // If no budget exists, there is nothing to check.
+            // Debugging information.
+            print(
+                "Matching budgets found: \(matchingBudgets.count)"
+            )
+
+            // Stop if no budget exists for this category/month.
             guard let budget = matchingBudgets.first else {
+
+                print(
+                    "No budget found for \(category) in the selected month."
+                )
                 return
             }
 
-            // Retrieve expenses belonging to the same category and month.
-            let expenseRequest: NSFetchRequest<Expense> = Expense.fetchRequest()
+            // MARK: Find Monthly Expenses
 
-            guard let nextMonth = calendar.date(
-                byAdding: .month,
-                value: 1,
-                to: selectedMonth
-            ) else {
-                return
-            }
+            let expenseRequest: NSFetchRequest<Expense> =
+                Expense.fetchRequest()
 
+            // Retrieve expenses for the same category and month.
             expenseRequest.predicate = NSPredicate(
                 format: "category == %@ AND date >= %@ AND date < %@",
                 category,
@@ -237,16 +261,39 @@ struct AddExpenseView: View {
                 nextMonth as NSDate
             )
 
-            let monthlyExpenses = try viewContext.fetch(expenseRequest)
+            let monthlyExpenses = try viewContext.fetch(
+                expenseRequest
+            )
 
-            // Calculate total spending for this category.
-            var totalSpent = 0.0
-
-            for expense in monthlyExpenses {
-                totalSpent = totalSpent + expense.amount
+            // Calculate total monthly spending.
+            let totalSpent = monthlyExpenses.reduce(0.0) {
+                $0 + $1.amount
             }
 
-            // Ask NotificationManager to check the budget threshold.
+            // Calculate spending percentage.
+            guard budget.amount > 0 else {
+
+                print("Budget amount must be greater than zero.")
+                return
+            }
+
+            let percentage = (
+                totalSpent / budget.amount
+            ) * 100
+
+            // MARK: Debugging Information
+
+            print("----- SMARTSPEND BUDGET CHECK -----")
+            print("Category: \(category)")
+            print("Month: \(selectedMonth)")
+            print("Monthly expenses: \(monthlyExpenses.count)")
+            print("Total spent: Rs. \(totalSpent)")
+            print("Budget limit: Rs. \(budget.amount)")
+            print("Budget used: \(percentage)%")
+            print("-----------------------------------")
+
+            // MARK: Trigger Budget Notification
+
             NotificationManager.shared.checkBudgetAlert(
                 category: category,
                 spent: totalSpent,
@@ -254,10 +301,12 @@ struct AddExpenseView: View {
                 month: selectedMonth
             )
 
+            print("Budget alert check completed.")
+
         } catch {
 
-            // The expense is already saved.
-            // A notification error should not undo that expense.
+            // The expense has already been saved.
+            // Budget checking errors should not undo it.
             print(
                 "Budget checking error: \(error.localizedDescription)"
             )
@@ -265,7 +314,7 @@ struct AddExpenseView: View {
     }
 }
 
-// MARK: Xcode Preview
+// MARK: - Xcode Preview
 
 #Preview {
 
